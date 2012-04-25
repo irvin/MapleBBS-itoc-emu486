@@ -1008,6 +1008,7 @@ static void
 tn_motd()
 {
   usint ufo;
+  char ans[4];
 
   ufo = cuser.ufo;
 
