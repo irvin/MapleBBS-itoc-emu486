@@ -1,3 +1,4 @@
+#include <string.h>
 #include <sys/stat.h>
 #include <dirent.h>
 
@@ -28,7 +29,7 @@ rm_dir(fpath)
       continue;
 
     strcpy(fname, fpath);
-    if (!stat(buf, &st))
+    if (!lstat(buf, &st))
     {
       if (S_ISDIR(st.st_mode))
 	rm_dir(buf);

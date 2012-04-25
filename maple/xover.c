@@ -1194,7 +1194,7 @@ xo_jump(pos, zone)
   move(b_lines, 0);
   clrtoeol();
 #endif
-  outf(xz[zone].feeter);	/* itoc.010403: 把 b_lines 填上 feeter */
+  outf(xz[zone - XO_ZONE].feeter);	/* itoc.010403: 把 b_lines 填上 feeter */
 
   pos = atoi(buf);
 
@@ -1224,7 +1224,7 @@ xover(cmd)
     {
       if (cmd == XO_FOOT)
       {
-	outf(xz[zone].feeter);	/* itoc.010403: 把 b_lines 填上 feeter */
+	outf(xz[zone - XO_ZONE].feeter);	/* itoc.010403: 把 b_lines 填上 feeter */
 	break;
       }
 
@@ -1743,6 +1743,30 @@ xo_cursor(ch, pagemax, num, pageno, cur, redraw)
     *cur = num % XO_TALL;
     *redraw = 1;
     break;
+
+  default:
+    if (ch >= '1' && ch <= '9')
+    {
+      int pos;
+      char buf[6];
+
+      buf[0] = ch;
+      buf[1] = '\0';
+      vget(b_lines, 0, "跳至第幾項：", buf, sizeof(buf), GCARRY);
+
+      pos = atoi(buf);
+
+      if (pos > 0)
+      {
+	pos--;
+	if (pos >num)
+	  pos = num;
+	*pageno = pos / XO_TALL;
+	*cur = pos % XO_TALL;
+      }
+
+      *redraw = 1;	/* 就算沒有換頁，也要重繪 feeter */
+    }
   }
 
   return ch;

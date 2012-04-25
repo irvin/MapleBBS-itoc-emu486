@@ -181,11 +181,10 @@ post_brdtitle(xo)
     {
       memcpy(oldbrd, &newbrd, sizeof(BRD));
       rec_put(FN_BRD, &newbrd, sizeof(BRD), currbno, NULL);
-      return XO_HEAD;	/* itoc.011125: 要重繪中文板名 */
     }
   }
 
-  return XO_FOOT;
+  return XO_HEAD;
 }
 
 
@@ -210,14 +209,14 @@ post_memo_edit(xo)
     if (mode == 'd')
     {
       unlink(fpath);
-      return XO_FOOT;
     }
-
-    if (vedit(fpath, 0))	/* Thor.981020: 注意被talk的問題 */
-      vmsg(msg_cancel);
-    return XO_HEAD;
+    else
+    {
+      if (vedit(fpath, 0))	/* Thor.981020: 注意被talk的問題 */
+	vmsg(msg_cancel);
+    }
   }
-  return XO_FOOT;
+  return XO_HEAD;
 }
 
 
@@ -245,7 +244,7 @@ post_battr_noscore(xo)
     newbrd.battr |= BRD_NOSCORE;
     break;
   default:
-    return XO_FOOT;
+    return XO_HEAD;
   }
 
   if (memcmp(&newbrd, oldbrd, sizeof(BRD)) && vans(msg_sure_ny) == 'y')
@@ -254,7 +253,7 @@ post_battr_noscore(xo)
     rec_put(FN_BRD, &newbrd, sizeof(BRD), currbno, NULL);
   }
 
-  return XO_FOOT;
+  return XO_HEAD;
 }
 #endif	/* HAVE_SCORE */
 
@@ -277,7 +276,7 @@ post_changeBM(xo)
 
   blist = oldbrd->BM;
   if (is_bm(blist, cuser.userid) != 1)	/* 只有正板主可以設定板主名單 */
-    return XO_FOOT;
+    return XO_HEAD;
 
   memcpy(&newbrd, oldbrd, sizeof(BRD));
 
@@ -305,7 +304,7 @@ post_changeBM(xo)
 	vmsg("不可以將自己移出板主名單");
 	continue;
       }
-      else if (!str_cmp(buf + BMlen - len, userid))	/* 名單上最後一位，ID 後面不接 '/' */
+      else if (!str_cmp(buf + BMlen - len, userid) && buf[BMlen - len - 1] == '/')	/* 名單上最後一位，ID 後面不接 '/' */
       {
 	buf[BMlen - len - 1] = '\0';			/* 刪除 ID 及前面的 '/' */
 	len++;
@@ -347,11 +346,10 @@ post_changeBM(xo)
     memcpy(oldbrd, &newbrd, sizeof(BRD));
     rec_put(FN_BRD, &newbrd, sizeof(BRD), currbno, NULL);
 
-    sprintf(currBM, "板主：%s", newbrd.BM);
-    return XO_HEAD;	/* 要重繪檔頭的板主 */
+    sprintf(currBM, "板主：%s", newbrd.BM);	/* 要重繪檔頭的板主 */
   }
 
-  return XO_BODY;
+  return XO_HEAD;
 }
 
 
@@ -369,9 +367,6 @@ post_brdlevel(xo)
 
   oldbrd = bshm->bcache + currbno;
   memcpy(&newbrd, oldbrd, sizeof(BRD));
-
-  if (newbrd.battr & BRD_NOCHANGE)  /* qazq.031212: 限制某些看板不能修改屬性 */
-    return XO_FOOT;
 
   switch (vans("1)公開看板 2)秘密看板 3)好友看板？[Q] "))
   {
@@ -394,7 +389,7 @@ post_brdlevel(xo)
     break;
 
   default:
-    return XO_FOOT;
+    return XO_HEAD;
   }
 
   if (memcmp(&newbrd, oldbrd, sizeof(BRD)) && vans(msg_sure_ny) == 'y')
@@ -403,7 +398,7 @@ post_brdlevel(xo)
     rec_put(FN_BRD, &newbrd, sizeof(BRD), currbno, NULL);
   }
 
-  return XO_FOOT;
+  return XO_HEAD;
 }
 #endif	/* HAVE_MODERATED_BOARD */
 
@@ -460,6 +455,8 @@ int
 post_manage(xo)
   XO *xo;
 {
+  BRD *brd;
+
 #ifdef POPUP_ANSWER
   char *menu[] = 
   {
@@ -487,8 +484,20 @@ post_manage(xo)
     "？[Q] ";
 #endif
 
+  vs_bar("板主管理");
+  brd = bshm->bcache + currbno;
+  prints("看板名稱：%s\n看板說明：[%s] %s\n板主名單：%s\n",
+    brd->brdname, brd->class, brd->title, brd->BM);
+  prints("中文敘述：%s\n", brd->title);
+#ifdef HAVE_MODERATED_BOARD
+  prints("看板權限：%s看板\n", brd->readlevel == PERM_SYSOP ? "秘密" : brd->readlevel == PERM_BOARD ? "好友" : "公開");
+#endif
+
   if (!(bbstate & STAT_BOARD))
-    return XO_NONE;
+  {
+    vmsg(NULL);
+    return XO_HEAD;
+  }
 
 #ifdef POPUP_ANSWER
   switch (pans(3, 20, "板主選單", menu))
@@ -519,5 +528,5 @@ post_manage(xo)
 #endif
   }
 
-  return XO_FOOT;
+  return XO_HEAD;
 }

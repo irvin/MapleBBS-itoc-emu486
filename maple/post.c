@@ -439,6 +439,9 @@ do_post(xo, title)
 #ifdef HAVE_UNANONYMOUS_BOARD
     do_unanonymous(fpath);
 #endif
+
+    /* gaod.091205: 發匿名文後不取消 EDIT_ANONYMOUS 會導致轉錄文章 header 資訊有誤，Thanks for om@cpu.tfcis.org. */
+    curredit &= ~EDIT_ANONYMOUS;
   }
   else
 #endif
@@ -649,10 +652,7 @@ hdr_outs(hdr, cc)		/* print HDR's subject */
 
 #ifdef HAVE_DECLARE
   /* itoc.010217: 改用星期幾來上色 */
-  if (cuser.ufo & UFO_NOCOLOR)
-    prints("%s ", hdr->date + 3);
-  else
-    prints("\033[1;3%dm%s\033[m ", cal_day(hdr->date) + 1, hdr->date + 3);
+  prints("\033[1;3%dm%s\033[m ", cal_day(hdr->date) + 1, hdr->date + 3);
 #else
   outs(hdr->date + 3);
   outc(' ');
@@ -845,11 +845,7 @@ post_item(num, hdr)
     'U', 'V', 'W', 'X', 'Y', 'Z'
   };
 
-/*  prints("%6d%c%c", (hdr->xmode & POST_BOTTOM) ? -1 : num, tag_char(hdr->chrono), post_attr(hdr)); */
-  if (hdr->xmode & POST_BOTTOM)
-    prints("    ★%c%c", tag_char(hdr->chrono), post_attr(hdr));
-  else
-    prints("%6d%c%c", num, tag_char(hdr->chrono), post_attr(hdr));
+  prints("%6d%c%c", (hdr->xmode & POST_BOTTOM) ? -1 : num, tag_char(hdr->chrono), post_attr(hdr));
   if (hdr->xmode & POST_SCORE)
   {
     num = hdr->score;
@@ -1053,7 +1049,7 @@ re_key:
       break;
 
     case 'm':
-      if ((bbstate & STAT_BOARD) && !(xmode & POST_MARKED))
+      if ((bbstate & STAT_BOARD) && !(xmode & (POST_MARKED | POST_DELETE)))
       {
 	/* hdr->xmode = xmode ^ POST_MARKED; */
 	/* 在 post_browse 時看不到 m 記號，所以限制只能 mark */
@@ -2067,7 +2063,7 @@ post_score(xo)
     time(&now);
     ptime = localtime(&now);
 
-    fprintf(fp, "→ \033[1;36m%s \033[3%s\033[33m：%-*s\033[0;33m%02d/%02d/%02d\033[m\n", 
+    fprintf(fp, "→ \033[36m%s \033[3%s\033[m：%-*s%02d/%02d/%02d\n", 
       userid, verb, maxlen, reason, 
       ptime->tm_year % 100, ptime->tm_mon + 1, ptime->tm_mday);
     fclose(fp);

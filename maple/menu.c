@@ -224,7 +224,8 @@ void
 vs_head(title, mid)
   char *title, *mid;
 {
-  char buf[40], ttl[60];
+  char buf[(T_COLS - 1) - 79 + 69 + 1];		/* d_cols 最大可能是 (T_COLS - 1) */
+  char ttl[(T_COLS - 1) - 79 + 69 + 1];
   int spc, len;
 
   if (mid)	/* xxxx_head() 都是用 vs_head(title, str_site); */
@@ -238,24 +239,16 @@ vs_head(title, mid)
     mid = str_site;
   }
 
-  len = d_cols + 69 - strlen(title) - strlen(currboard);
+  len = d_cols + 69 - strlen(title) - strlen(currboard);	/* len: 中間還剩下多長的空間 */
 
   if (HAS_STATUS(STATUS_BIFF))
   {
     mid = "\033[5;41m 郵差來按鈴了 \033[m";
     spc = 14;
   }
-
- else if (HAS_PERM(PERM_ALLREG) &&
-   rec_num(FN_RUN_RFORM, sizeof(RFORM)))
- {
-   mid = "\033[5;45m 有人填註冊單 \033[m";
-   spc = 20;
- }
-
   else
   {
-    if ((spc = strlen(mid)) > len)
+    if ((spc = strlen(mid)) > len)	/* 空間不夠擺下原本要擺的 mid，只好把 mid 截斷 */
     {
       spc = len;
       memcpy(ttl, mid, spc);
@@ -264,36 +257,7 @@ vs_head(title, mid)
     }
   }
 
-
- if (HAS_PERM(PERM_ALLBOARD))
- {
-   int bno;
-   BRD *brd;
-   extern BCACHE *bshm;
-
-   bno = brd_bno("newboard");      
-   if (currbno != bno)     /* 若已經在 [newboard] 就無需再 brh_get() */
-   {
-     brd = bshm->bcache + bno;
-
- #ifdef ENHANCED_VISIT
-      brh_get(brd->bstamp, bno);
-      if (brh_unread(brd->blast))
- #else
-      if (brd->blast > brd_visit[bno])
- #endif
-      {
-        mid = "\033[5;42m 有人申請看板 \033[m";
-        spc = 14;
-      }
- #ifdef ENHANCED_VISIT
-      brd = bshm->bcache + currbno;
-      brh_get(brd->bstamp, currbno);
- #endif
-    }
-  }
-
-  spc = 2 + len - spc;
+  spc = 2 + len - spc;		/* 擺完 mid 以後，中間還有 spc 格空間，在 mid 左右各放 spc/2 長的空白 */
   len = 1 - spc & 1;
   memset(buf, ' ', spc >>= 1);
   buf[spc] = '\0';
@@ -814,8 +778,8 @@ static MENU menu_game3[] =
   "bin/tetris.so:main_tetris", 0, - M_GAME,
   "2Tetris    ♂ 俄羅斯塊 ♀",
 
-  "bin/gray.so:main_gray", 0, - M_GAME,
-  "3Gray      ♂ 淺灰大戰 ♀",
+  "bin/reversi.so:main_reversi", 0, - M_GAME,
+  "3Reversi   ♂ 淺灰大戰 ♀",
 
   menu_game, PERM_MENU + '0', M_XMENU,
   "反斗特區"

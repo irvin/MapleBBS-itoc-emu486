@@ -243,8 +243,9 @@ is_badid(userid)
 }
 
 
+#if 0
 static int
-uniq_userno(fd)
+uniq_userno(fd)			/* 找 .USR 前面空的 userno */
   int fd;
 {
   char buf[4096];
@@ -270,6 +271,19 @@ uniq_userno(fd)
   }
 
   return userno;
+}
+#endif
+
+
+static int
+uniq_userno(fd)
+  int fd;
+{
+  struct stat st;
+
+  fstat(fd, &st);
+  lseek(fd, 0, SEEK_END);
+  return (st.st_size / sizeof(SCHEMA)) + 1;
 }
 
 
@@ -505,9 +519,8 @@ utmp_setup(mode)
 #ifdef GUEST_NICK
   if (!cuser.userlevel)		/* guest */
   {
- /*   char nick[9][5] = {"遊子", "水滴", "訪客", "補帖", "豬頭", "影子", "病毒", "童年", "石像"}; */
-    char nick[11][9] = {"改札機", "流浪狗", "辣妹", "行李包", "便當", "阿宅", "黃牛票", "椅子", "婆婆", "黃背心", "米蟲"};
-    sprintf(cuser.username, "月台上的%s", nick[ap_start % 11]);
+    char nick[9][5] = {"遊子", "水滴", "訪客", "補帖", "豬頭", "影子", "病毒", "童年", "石像"};
+    sprintf(cuser.username, "太陽下的%s", nick[ap_start % 9]);
   }
 #endif	/* GUEST_NICK */
 
@@ -776,8 +789,7 @@ login_level()
   if (!(level & PERM_ALLADMIN))
   {
 #ifdef JUSTIFY_PERIODICAL
-/*  if ((level & PERM_VALID) && (cuser.tvalid + VALID_PERIOD < ap_start)) */
-    if ((level & PERM_VALID) && !(level & PERM_XEMPT) && (cuser.tvalid + VALID_PERIOD < ap_start))
+    if ((level & PERM_VALID) && (cuser.tvalid + VALID_PERIOD < ap_start))
     {
       level ^= PERM_VALID;
       /* itoc.011116: 主動發信通知使用者，一直送信不知道會不會太耗空間 !? */
@@ -898,8 +910,7 @@ login_other()
   if (!HAS_PERM(PERM_VALID))
     film_out(FILM_NOTIFY, -1);		/* 尚未認證通知 */
 #ifdef JUSTIFY_PERIODICAL
-/*  else if (!HAS_PERM(PERM_ALLADMIN) && (cuser.tvalid + VALID_PERIOD - INVALID_NOTICE_PERIOD < ap_start)) */
-  else if (!HAS_PERM(PERM_ALLADMIN | PERM_XEMPT) && (cuser.tvalid + VALID_PERIOD - 10 * 86400 < ap_start))
+  else if (!HAS_PERM(PERM_ALLADMIN) && (cuser.tvalid + VALID_PERIOD - INVALID_NOTICE_PERIOD < ap_start))
     film_out(FILM_REREG, -1);		/* 有效時間逾期 10 天前提出警告 */
 #endif
 
@@ -997,7 +1008,6 @@ static void
 tn_motd()
 {
   usint ufo;
-  char ans[4];
 
   ufo = cuser.ufo;
 

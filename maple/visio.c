@@ -805,12 +805,6 @@ outx(str)
   uschar *str;
 {
   int ch;
-  static char buf[16];
-
-  time_t now;
-  struct tm *ptime;
-  time(&now);
-  ptime = localtime(&now);
 
   while (ch = *str)
   {
@@ -827,11 +821,6 @@ outx(str)
 	outs(cuser.username);
 	str += 3;
 	continue;
-      case 't':         /* **t 顯示日期 */
-        sprintf(buf, "%02d\033[5m：\033[0m%02d", ptime->tm_hour, ptime->tm_min);
-        outs(buf);
-        str += 3;
-        continue;
       }
     }
     outc(ch);

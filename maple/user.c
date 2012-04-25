@@ -132,23 +132,26 @@ POP3_Check(sock, account, passwd)
     switch (sock)
     {
     case 1:		/* Welcome Message */
-      fgets(buf, sizeof(buf), fsock);
+      if (!fgets(buf, sizeof(buf), fsock))
+        strcpy(buf, "Connection failed.");
       break;
 
     case 2:		/* Verify Account */
       fprintf(fsock, "user %s\r\n", account);
       fflush(fsock);
-      fgets(buf, sizeof(buf), fsock);
+      if (!fgets(buf, sizeof(buf), fsock))
+        strcpy(buf, "Connection failed.");
       break;
 
     case 3:		/* Verify Password */
       fprintf(fsock, "pass %s\r\n", passwd);
       fflush(fsock);
-      fgets(buf, sizeof(buf), fsock);
+      if (!fgets(buf, sizeof(buf), fsock))
+        strcpy(buf, "Connection failed.");
       sock = -1;
       break;
 
-    default:		/* 0:Successful 4:Failure  */
+    default:		/* 0:Successful -1:Failure  */
       fprintf(fsock, "quit\r\n");
       fclose(fsock);
       return sock;

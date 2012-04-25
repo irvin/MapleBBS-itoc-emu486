@@ -1923,7 +1923,7 @@ postlist_list(fpw, folder, brdname, start, total)
 {
   HDR hdr;
   char owner[80], *ptr1, *ptr2;
-  int fd;
+  int fd, xmode;
 
   fputs("<table cellspacing=0 cellpadding=4 border=0>\n<tr bgcolor=" HCOLOR_TIE ">\n"
     "  <td width=15>標</td>\n"
@@ -1972,14 +1972,13 @@ postlist_list(fpw, folder, brdname, start, total)
 	  i, hdr.chrono, i, hdr.chrono);
       }
 
-      if (hdr.xmode & POST_BOTTOM)
-	fputs("  <td>重要</td>\n", fpw);
-      else
-	fprintf(fpw, "  <td>%d</td>\n", i);
-      fprintf(fpw, "  <td>%s</td>\n  <td>", hdr.xmode & POST_MARKED ? "m" : "");
+      xmode = hdr.xmode;
+
+      fprintf(fpw, "  <td>%d</td>\n  <td>%s</td>\n  <td>",
+	xmode & POST_BOTTOM ? -1 : i, xmode & POST_MARKED ? "m" : "");
 
 #ifdef HAVE_SCORE
-      if (hdr.xmode & POST_SCORE)
+      if (xmode & POST_SCORE)
 	fprintf(fpw, "<font color='%s'>%d</font>", hdr.score >= 0 ? "red" : "green", abs(hdr.score));
 #endif
 
@@ -3190,7 +3189,7 @@ static Command cmd_table_get[] =
   cmd_robots,      "robots.txt",9,
 #endif
 
-  cmd_mainpage,    "",          0,
+  cmd_mainpage,    "\0",        1,
 
   NULL,            NULL,        0
 };
@@ -3467,7 +3466,15 @@ do_cmd(ap, str, end, mode)
     {
       /* 分析 Cookie */
       if (!str_ncmp(str, "Cookie: user=", 13))
+      {
 	str_ncpy(ap->cookie, str + 13, LEN_COOKIE);
+      }
+      else if (!str_ncmp(str, "Cookie: ", 8))	/* waynesan.081018: 修正多 cookie 的狀況 */
+      {
+	char *user;
+	if (user = strstr(str, "user="))
+	  str_ncpy(ap->cookie, user + 5, LEN_COOKIE);
+      }
 
       /* 分析 If-Modified-Since */
       if ((mode & AM_GET) && !str_ncmp(str, "If-Modified-Since: ", 19))	/* str 格式為 If-Modified-Since: Sat, 29 Oct 1994 19:43:31 GMT */
@@ -3497,10 +3504,10 @@ do_cmd(ap, str, end, mode)
 	  break;
       }
 
-      /* 如果在 command_table 裡面找不到，那麼自動重新導向 */
+      /* waynesan.081018: 如果在 command_table 裡面找不到，那麼送 404 Not Found */
       if (!ptr)
       {
-	out_http(ap, HS_REDIRECT, NULL);
+	out_error(ap, HS_NOTFOUND);
 	return -1;
       }
 

@@ -127,9 +127,7 @@ trans_acct(old, new)
   str_ncpy(new->username, old->username, sizeof(new->username));
 
   new->userlevel = old->userlevel;
-/*  new->ufo = old->ufo; */
-  new->ufo = UFO_DEFAULT_NEW;
-
+  new->ufo = old->ufo;
   new->signature = old->signature;
 
   new->year = old->year;
