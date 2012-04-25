@@ -1790,4 +1790,11 @@
 
 [2007/05/18] struct.h 加大 ANSILINELEN。
 
+[2007/06/09] xover.c xo_cursor() 加入可直接輸入位置跳去該篇的功能。
+
+[2007/10/16] acct.c 避免多位站務重覆開板。
+
+[2007/11/18] reversi.c 將 gray.c 正名。
+
+[2011/08/23] user.c 修正 pop3 信箱認證 timeout。
 
