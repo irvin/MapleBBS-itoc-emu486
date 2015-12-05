@@ -32,7 +32,7 @@ main()
 
   for (i = 0; str = folders[i]; i++)
   {
-    sprintf(cmd, "tar cfz %s/%s.tgz ./%s", bakpath, str, str);
+    sprintf(cmd, "tar cfJ %s/%s.tar.xz ./%s", bakpath, str, str);
     system(cmd);
   }
 

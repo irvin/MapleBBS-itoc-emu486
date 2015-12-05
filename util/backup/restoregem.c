@@ -48,7 +48,7 @@ main()
 
     if (ptr[0] > ' ' && ptr[0] != '.')
     {
-      sprintf(cmd, "tar xfz %s -C %s/", ptr, gempath);
+      sprintf(cmd, "tar xfJ %s -C %s/", ptr, gempath);
       system(cmd);
     }
   }
@@ -70,7 +70,7 @@ main()
 
     if (ptr[0] > ' ' && ptr[0] != '.')
     {
-      sprintf(cmd, "tar xfz %s -C %s/", ptr, gempath);
+      sprintf(cmd, "tar xfJ %s -C %s/", ptr, gempath);
       system(cmd);
     }
   }

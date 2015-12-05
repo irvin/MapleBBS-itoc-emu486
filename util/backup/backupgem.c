@@ -47,7 +47,7 @@ main()
 
     if (ptr[0] > ' ' && ptr[0] != '.')
     {
-      sprintf(cmd, "tar cfz %s/%s.tgz ./%s", bakpath, ptr, ptr);
+      sprintf(cmd, "tar cfJ %s/%s.tar.xz ./%s", bakpath, ptr, ptr);
       system(cmd);
     }
   }
@@ -70,7 +70,7 @@ main()
 
     if (ptr[0] > ' ' && ptr[0] != '.')
     {
-      sprintf(cmd, "tar cfz %s/%s.tgz ./%s", gempath, ptr, ptr);
+      sprintf(cmd, "tar cfJ %s/%s.tar.xz ./%s", gempath, ptr, ptr);
       system(cmd);
     }
   }
